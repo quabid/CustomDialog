@@ -1,6 +1,6 @@
 ## _Custom JDialog_
 
-### _Experiment with JDialog._
+### _Experimenting with JDialog._
 
 - Technologies
   - Javac: 15.0.1
