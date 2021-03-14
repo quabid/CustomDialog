@@ -1,6 +1,5 @@
 package com.gmail.quabidlord.netfaces.core;
 
-import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
@@ -9,7 +8,9 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.PrintStream;
 
+import javax.swing.JComboBox;
 import javax.swing.JDialog;
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 
@@ -31,13 +32,14 @@ public class MyDialog extends JDialog implements ActionListener, PropertyChangeL
     private final PathValidator pv = new PathValidator();
     private final String coordinates = constants.USRDIR + "netfaces-coordinates";
 
-    public MyDialog(MyFrame aFrame, String title) {
+    NetfaceFinder nf = new NetfaceFinder();
+
+    public MyDialog(JFrame aFrame, String title) {
         super(aFrame, true);
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent we) {
                 saveLocation();
-                optionPane.setValue(JOptionPane.CLOSED_OPTION);
                 progExit();
             }
 
@@ -47,12 +49,36 @@ public class MyDialog extends JDialog implements ActionListener, PropertyChangeL
             }
         });
 
-        // Create an array of the text and components to be displayed.
-        String msgString1 = "Statement or a question here";
-        String msgString2 = "Another statement or question";
-        textField = new JTextField(10);
+        String[] networkInterfaces = new String[nf.size()];
+        String status = "";
 
-        Object[] array = { msgString1, msgString2, textField };
+        switch (nf.size()) {
+        case 1:
+            status = nf.size() + " Adapter Address";
+            break;
+
+        default:
+            status = nf.size() + " Adapter Addresses";
+            break;
+        }
+
+        String msgString2 = "Adapter Name /IP";
+        String msgString1 = status;
+        int i = 0;
+
+        for (String face : nf.getNetFaces()) {
+            networkInterfaces[i] = face;
+            i++;
+        }
+
+        JComboBox netList = new JComboBox(networkInterfaces);
+        netList.setActionCommand("netList_combo");
+        netList.addPropertyChangeListener(this);
+        netList.setSelectedIndex(0);
+        netList.setName("netList_combobox");
+        netList.addActionListener(this);
+
+        Object[] array = { msgString1, msgString2, netList };
 
         // Create an array specifying the number of dialog buttons
         // and their text.
@@ -61,26 +87,30 @@ public class MyDialog extends JDialog implements ActionListener, PropertyChangeL
         // Create the JOptionPane.
         optionPane = new JOptionPane(array, JOptionPane.QUESTION_MESSAGE, JOptionPane.YES_NO_OPTION, img, options,
                 options[0]);
+        optionPane.setName("Option Pane");
+        optionPane.addPropertyChangeListener(this);
 
         // Make this dialog display it.
         setContentPane(optionPane);
         pack();
         setTitle(title);
         // Handle window closing correctly.
-        setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
-        setPreferredSize(new Dimension(660, 460));
+        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         setVisible(true);
     }
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        // TODO Auto-generated method stub
+        String propertyName = evt.getPropertyName();
+        println("Old Value: " + evt.getOldValue() + " New Value: " + evt.getNewValue() + "\n\tSource Name: "
+                + "\n\tPropery Name: " + propertyName + "\n");
 
     }
 
     @Override
     public void actionPerformed(ActionEvent ae) {
-
+        JComboBox jcb = (JComboBox) ae.getSource();
+        println("\n\tAction performed: " + ae.getActionCommand() + "\n\t" + jcb.getName());
     }
 
     private final void saveLocation() {
@@ -113,7 +143,7 @@ public class MyDialog extends JDialog implements ActionListener, PropertyChangeL
         }
     }
 
-    private final static javax.swing.ImageIcon img = createImageIcon("/netface-96.png");
+    private final static javax.swing.ImageIcon img = createImageIcon("/netface-48.png");
 
     private final void println(Object obj) {
         printer.println(String.valueOf(obj));
