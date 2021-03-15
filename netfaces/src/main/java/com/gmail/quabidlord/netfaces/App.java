@@ -16,6 +16,7 @@ public class App {
             public void run() {
                 final JFrame frame = new JFrame();
                 final MyDialog dialog = new MyDialog(frame, "Network Interfaces");
+                dialog.setEnabled(true);
             }
         });
     }

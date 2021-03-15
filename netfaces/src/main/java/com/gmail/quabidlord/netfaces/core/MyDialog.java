@@ -7,12 +7,12 @@ import java.awt.event.WindowEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.PrintStream;
+import java.util.regex.Pattern;
 
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
-import javax.swing.JTextField;
 
 import com.gmail.quabidlord.objectserializer.Deserializer;
 import com.gmail.quabidlord.objectserializer.MyConstants;
@@ -20,10 +20,16 @@ import com.gmail.quabidlord.objectserializer.Serializer;
 import com.gmail.quabidlord.pathmanager.core.PathValidator;
 
 public class MyDialog extends JDialog implements ActionListener, PropertyChangeListener {
+    /**
+     *
+     */
+    private static final long serialVersionUID = 6962369801192558431L;
     private JOptionPane optionPane;
-    private JTextField textField;
-    private final String btnString1 = "Enter";
-    private final String btnString2 = "Cancel";
+    private JComboBox<Object> networkInterfaceComboBox;
+    private String selectedItem = "";
+
+    private final String btnEnter = "Enter";
+    private final String btnCancel = "Cancel";
 
     private final Serializer serializer = new Serializer();
     private final Deserializer deserializer = new Deserializer();
@@ -33,6 +39,7 @@ public class MyDialog extends JDialog implements ActionListener, PropertyChangeL
     private final String coordinates = constants.USRDIR + "netfaces-coordinates";
 
     NetfaceFinder nf = new NetfaceFinder();
+    NetfaceInterrogator nfi = new NetfaceInterrogator();
 
     public MyDialog(JFrame aFrame, String title) {
         super(aFrame, true);
@@ -71,23 +78,23 @@ public class MyDialog extends JDialog implements ActionListener, PropertyChangeL
             i++;
         }
 
-        JComboBox netList = new JComboBox(networkInterfaces);
-        netList.setActionCommand("netList_combo");
-        netList.addPropertyChangeListener(this);
-        netList.setSelectedIndex(0);
-        netList.setName("netList_combobox");
-        netList.addActionListener(this);
+        networkInterfaceComboBox = new JComboBox<Object>(networkInterfaces);
+        networkInterfaceComboBox.setActionCommand("netList_combo");
+        networkInterfaceComboBox.setName("netList_combobox");
+        networkInterfaceComboBox.setSelectedIndex(0);
+        networkInterfaceComboBox.addActionListener(this);
+        selectedItem = String.valueOf(networkInterfaceComboBox.getItemAt(networkInterfaceComboBox.getSelectedIndex()));
 
-        Object[] array = { msgString1, msgString2, netList };
+        Object[] optionPaneConfig = { msgString1, msgString2, networkInterfaceComboBox };
 
         // Create an array specifying the number of dialog buttons
         // and their text.
-        Object[] options = { btnString1, btnString2 };
+        Object[] options = { btnEnter, btnCancel };
 
         // Create the JOptionPane.
-        optionPane = new JOptionPane(array, JOptionPane.QUESTION_MESSAGE, JOptionPane.YES_NO_OPTION, img, options,
-                options[0]);
-        optionPane.setName("Option Pane");
+        optionPane = new JOptionPane(optionPaneConfig, JOptionPane.QUESTION_MESSAGE, JOptionPane.YES_NO_OPTION, img,
+                options, options);
+        optionPane.setName("TheOptionPane");
         optionPane.addPropertyChangeListener(this);
 
         // Make this dialog display it.
@@ -101,16 +108,38 @@ public class MyDialog extends JDialog implements ActionListener, PropertyChangeL
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        String propertyName = evt.getPropertyName();
-        println("Old Value: " + evt.getOldValue() + " New Value: " + evt.getNewValue() + "\n\tSource Name: "
-                + "\n\tPropery Name: " + propertyName + "\n");
+        Pattern joptionpanePattern = Pattern.compile("^(javax.swing.JOptionPane)");
+        String source = String.valueOf(evt.getSource());
+        JOptionPane jop = null;
 
+        if (joptionpanePattern.matcher(source).find()) {
+            jop = (JOptionPane) evt.getSource();
+            String value = String.valueOf(jop.getValue()).trim().toLowerCase();
+
+            switch (value) {
+            case "enter":
+                nfi.interrogate(selectedItem);
+                break;
+
+            case "cancel":
+
+                break;
+
+            default:
+
+                break;
+            }
+        }
+
+        print("\n");
     }
 
     @Override
     public void actionPerformed(ActionEvent ae) {
-        JComboBox jcb = (JComboBox) ae.getSource();
-        println("\n\tAction performed: " + ae.getActionCommand() + "\n\t" + jcb.getName());
+        JComboBox<Object> jcb = (JComboBox) ae.getSource();
+        String si = String.valueOf(jcb.getItemAt(networkInterfaceComboBox.getSelectedIndex()));
+        selectedItem = si;
+        println("\n\tSelected Item: " + selectedItem + "\n");
     }
 
     private final void saveLocation() {
@@ -147,6 +176,10 @@ public class MyDialog extends JDialog implements ActionListener, PropertyChangeL
 
     private final void println(Object obj) {
         printer.println(String.valueOf(obj));
+    }
+
+    private final void print(Object obj) {
+        printer.print(String.valueOf(obj));
     }
 
 }

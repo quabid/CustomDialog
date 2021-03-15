@@ -15,6 +15,10 @@ import com.gmail.quabidlord.objectserializer.PathValidator;
 import com.gmail.quabidlord.objectserializer.Serializer;
 
 public class MyFrame extends JFrame {
+    /**
+     *
+     */
+    private static final long serialVersionUID = 4673401792562825489L;
     private final Serializer serializer = new Serializer();
     private final Deserializer deserializer = new Deserializer();
     private final PrintStream printer = new PrintStream(System.out);
